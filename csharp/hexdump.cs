@@ -5,7 +5,7 @@
     (https://github.com/mono/mono) and is released under the MIT license.
 
     Author: Darren Mulholland <dmulholland@outlook.ie>
-    License: MIT
+    License: Public Domain
 */
 
 using System;
