@@ -2,7 +2,7 @@
 Hexdump
 =======
 
-A simple hex dump command line utility, implemented in a selection of programming languages.
+A simple hex dump command line utility, implemented in C, C#, Go, Python, and Swift.
 
 Sample output:
 
@@ -24,9 +24,9 @@ Interface:
       <file>     file to dump (default: stdin)
 
     Options:
-      -o <int>   byte offset at which to begin reading
-      -n <int>   number of bytes to read
       -l <int>   bytes per line in output (default: 16)
+      -n <int>   number of bytes to read
+      -o <int>   byte offset at which to begin reading
 
     Flags:
       --help     display this help text and exit
