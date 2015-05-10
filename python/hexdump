@@ -11,12 +11,13 @@ __version__ = '1.1.0'
 
 
 import argparse
-import sys
+import os
 import signal
+import sys
 
 
 helptext = """\
-Usage: hexdump [FLAGS] [OPTIONS] ARGUMENTS
+Usage: %s [FLAGS] [OPTIONS] ARGUMENTS
 
 Arguments:
   <file>     file to dump (default: stdin)
@@ -28,7 +29,7 @@ Options:
 
 Flags:
   --help     display this help text and exit
-  --version  display version number and exit"""
+  --version  display version number and exit""" % os.path.basename(sys.argv[0])
 
 
 class HelpAction(argparse.Action):
