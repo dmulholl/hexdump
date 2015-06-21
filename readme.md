@@ -2,7 +2,9 @@
 Hexdump
 =======
 
-A simple hexdump command line utility, implemented in C, C#, Go, Python, and Swift.
+A simple hexdump command line utility, implemented in C, C#, Go, Python, Swift, and  x86 assembly.
+
+The output and command line interface are the same in all implementations.
 
 Sample output:
 
@@ -17,7 +19,7 @@ Sample output:
         70 | 43 65 6C 74  61 65 2C 20  6E 6F 73 74  72 61 20 47 | Celtae, nostra G
 
 
-### Interface
+## Interface
 
     Usage: hexdump [FLAGS] [OPTIONS] ARGUMENTS
 
@@ -34,6 +36,6 @@ Sample output:
       --version  display version number and exit
 
 
-### License
+## License
 
 Public domain, unless indicated otherwise. The C# version includes MIT-licensed option-parsing code from the [Mono](https://github.com/mono/mono) project.
