@@ -7,7 +7,7 @@ License: Public Domain
 
 """
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 
 import argparse
@@ -47,6 +47,7 @@ if hasattr(signal, 'SIGPIPE'):
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 
+# Wrapper for the sys.stdout.write() function.
 def write(s):
     # Suppress 'broken pipe' warnings when piping output through pagers.
     # This resolves the issue when running natively on Windows.
@@ -56,45 +57,83 @@ def write(s):
         sys.exit()
 
 
-def writeln(offset, bytes, bpl):
+# Print a single line of output to stdout.
+def writeln(offset, buffer, bytes_per_line):
+
+    # Write the line number.
     write('% 6X |' % offset)
-    for i in range(bpl):
-        write(' %02X' % bytes[i] if i < len(bytes) else '   ')
-        if (i + 1) % 4 == 0 and i != bpl - 1:
+
+    for i in range(bytes_per_line):
+
+        # Write an extra space in front of every fourth byte except the first.
+        if i > 0 and i % 4 == 0:
             write(' ')
+
+        # Write the byte in hex form, or a spacer if we're out of bytes.
+        write(' %02X' % buffer[i] if i < len(buffer) else '   ')
+
     write(' | ')
-    for i in range(len(bytes)):
-        write('%c' % bytes[i] if 32 <= bytes[i] <= 126 else '.')
+
+    # Write a character for each byte in the printable ascii range.
+    for i in range(len(buffer)):
+        write('%c' % buffer[i] if 32 <= buffer[i] <= 126 else '.')
+
     write('\n')
 
 
-def dump(file, offset=0, bytes_to_read=-1, bpl=16):
+# Dump the specified file to stdout.
+def dump(file, offset, bytes_to_read, bytes_per_line):
+
+    # If an offset has been specified, attempt to seek to it.
     if offset:
         if file.seekable():
             file.seek(offset)
         else:
             sys.exit('Error: %s is not seekable.' % file.name)
+
+    # Read and dump one line per iteration.
     while True:
-        if bytes_to_read > -1:
-            bytes = file.read(bpl if bpl < bytes_to_read else bytes_to_read)
+
+        # If bytes_to_read < 0 (read all), try to read one full line.
+        if bytes_to_read < 0:
+            max_bytes = bytes_per_line
+
+        # If line length < bytes_to_read, try to read one full line.
+        elif bytes_per_line < bytes_to_read:
+            max_bytes = bytes_per_line
+
+        # Otherwise, try to read all the remaining bytes in one go.
         else:
-            bytes = file.read(bpl)
-        if len(bytes):
-            writeln(offset, bytes, bpl)
-            offset += len(bytes)
-            bytes_to_read -= len(bytes)
+            max_bytes = bytes_to_read
+
+        # Attempt to read up to max_bytes from the file.
+        buffer = file.read(max_bytes)
+
+        # A buffer length of zero means we're done.
+        if len(buffer):
+            writeln(offset, buffer, bytes_per_line)
+            offset += len(buffer)
+            bytes_to_read -= len(buffer)
         else:
             break
 
 
 def main():
+
+    # Setting add_help to false prevents the parser from automatically
+    # generating a -h flag.
     parser = argparse.ArgumentParser(add_help=False)
+
+    # The filename argument is optional. We default to reading from
+    # stdin if it's omitted.
     parser.add_argument('file',
         nargs='?',
         help='file to dump (default: stdin)',
         type=argparse.FileType('rb'),
         default=sys.stdin.buffer,
     )
+
+    # Flags.
     parser.add_argument('--help',
         action = HelpAction,
         nargs=0,
@@ -104,6 +143,8 @@ def main():
         action='version',
         version=__version__,
     )
+
+    # Options.
     parser.add_argument('-l',
         help='bytes per line in output (default: 16)',
         default=16,
@@ -116,7 +157,7 @@ def main():
         type=int,
         default=-1,
         const=256,
-        dest='num',
+        dest='btr',
     )
     parser.add_argument('-o',
         help='offset at which to begin reading (default: 0)',
@@ -124,8 +165,9 @@ def main():
         default=0,
         dest='offset',
     )
+
     args = parser.parse_args()
-    dump(args.file, args.offset, args.num, args.bpl)
+    dump(args.file, args.offset, args.btr, args.bpl)
 
 
 if __name__ == '__main__':
