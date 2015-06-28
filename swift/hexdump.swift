@@ -3,8 +3,9 @@
     Hex dump command line utility.
 
     This code was written to target Swift 1.1 (November 2014), an early
-    and surprisingly immature release of the language. It's possibly the
-    ugliest code I've ever written.
+    and surprisingly immature release of the language. It won't compile
+    with later versions as 1.2 introduced backwards-compatability-breaking
+    changes.
 
     Author: Darren Mulholland <dmulholland@outlook.ie>
     License: Public Domain

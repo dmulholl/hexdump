@@ -1,3 +1,8 @@
+// Hex dump command line utility.
+//
+// Author: Darren Mulholland <dmulholland@outlook.ie>
+// License: Public Domain
+
 extern crate getopts;
 
 use std::io;
@@ -5,11 +10,13 @@ use std::io::Seek;
 use std::fs::File;
 
 
+// Print the application's version number.
 fn version() {
     println!("0.1.0");
 }
 
 
+// Print the application's help text.
 fn help() {
     println!("\
 Usage: hexdump [FLAGS] [OPTIONS] ARGUMENTS
@@ -29,10 +36,17 @@ Flags:
 
 
 fn main() {
+
+    // Offset in bytes at which to begin reading the file.
     let mut offset: i64 = 0;
+
+    // Number of bytes per line in the output.
     let mut bytes_per_line: i64 = 16;
+
+    // Number of bytes to read. -1 means read the entire file.
     let mut bytes_to_read: i64 = -1;
 
+    // Set up the command line argument parser.
     let mut parser = getopts::Options::new();
     parser.optflag("", "help", "print this help text and exit");
     parser.optflag("", "version", "print version number and exit");
@@ -40,6 +54,7 @@ fn main() {
     parser.optopt("n", "", "number of bytes to read", "<int>");
     parser.optopt("o", "", "byte offset at which to begin reading", "<int>");
 
+    // Parse the command line arguments.
     let args: Vec<String> = std::env::args().collect();
     let matches = match parser.parse(&args[1..]) {
         Ok(matches) => matches,
@@ -49,16 +64,19 @@ fn main() {
         }
     };
 
+    // Check for the --help flag.
     if matches.opt_present("help") {
         help();
         std::process::exit(0);
     }
 
+    // Check for the --version flag.
     if matches.opt_present("version") {
         version();
         std::process::exit(0);
     }
 
+    // Check for the -l <bytes-per-line> option.
     match matches.opt_str("l") {
         Some(argstr) => {
             match argstr.parse::<i64>() {
@@ -74,6 +92,7 @@ fn main() {
         None => ()
     };
 
+    // Check for the -n <bytes-to-read> option.
     match matches.opt_str("n") {
         Some(argstr) => {
             match argstr.parse::<i64>() {
@@ -89,6 +108,7 @@ fn main() {
         None => ()
     }
 
+    // Check for the -o <offset> option.
     match matches.opt_str("o") {
         Some(argstr) => {
             match argstr.parse::<i64>() {
@@ -104,6 +124,7 @@ fn main() {
         None => ()
     }
 
+    // Default to reading from stdin if no input filename has been specified.
     if matches.free.is_empty() {
         if offset > 0 {
             println!("Error: cannot seek into stdin.");
@@ -127,7 +148,7 @@ fn main() {
             match file.seek(io::SeekFrom::Start(offset as u64)) {
                 Ok(_) => (),
                 Err(_) => {
-                    println!("Error: cannot seek the specified offset.");
+                    println!("Error: cannot seek to the specified offset.");
                     std::process::exit(1);
                 }
             }
@@ -137,15 +158,19 @@ fn main() {
 }
 
 
+// Print a hex dump of the specified file to stdout.
 fn dump<T>(mut file: T,
            mut offset: i64,
            mut bytes_to_read:
            i64, bytes_per_line: i64) where T: io::Read {
 
+    // Maximum number of bytes to read per iteration.
     let mut max_bytes;
+
+    // Buffer for storing file input.
     let mut buffer: Vec<u8> = vec![0; bytes_per_line as usize];
 
-    // Read and dump one line per iteration.
+    // Read and dump one line of output per iteration.
     loop {
 
         // If bytes_to_read < 0 (read all), try to read one full line.
@@ -159,6 +184,7 @@ fn dump<T>(mut file: T,
             max_bytes = bytes_to_read;
         }
 
+        // Attempt to read up to max_bytes from the file.
         let bytes = &mut buffer[0..max_bytes as usize];
 
         match file.read(bytes) {
@@ -179,6 +205,8 @@ fn dump<T>(mut file: T,
     }
 }
 
+
+// Write a single line of output to stdout.
 fn writeln(bytes: &[u8], num_bytes: usize, offset: i64, bytes_per_line: i64) {
 
     // Write the line number.

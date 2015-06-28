@@ -2,7 +2,7 @@
 Hexdump
 =======
 
-A simple hexdump command line utility, implemented in C, C#, Go, Python, Swift, and  x86 assembly.
+A simple hexdump command line utility, implemented in a variety of languages including C, C#, Go, Python, Rust, Swift, and x86 assembly.
 
 The output and command line interface are the same in all implementations.
 
