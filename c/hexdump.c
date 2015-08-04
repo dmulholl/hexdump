@@ -1,5 +1,5 @@
 /*
-    Hex dump command line utility.
+    Hexdump command line utility.
 
     Author: Darren Mulholland <dmulholland@outlook.ie>
     License: Public Domain
@@ -13,9 +13,11 @@
 #include <string.h>
 
 
-char* version = "0.2.0";
+// Application version number.
+char* version = "0.3.0";
 
 
+// Command line help text.
 char* helpText =
     "Usage: hexdump [FLAGS] [OPTIONS] ARGUMENTS\n"
     "\n"
@@ -32,22 +34,30 @@ char* helpText =
     "  --version  display version number and exit\n";
 
 
+// Write a single line of output to stdout.
 void writeln(unsigned char* buffer, size_t numBytes, int offset, int bytesPerLine)
 {
+    // Write the line number.
     printf("%6X |", offset);
 
     for (int i = 0; i < bytesPerLine; i++) {
+
+        // Write an extra space in front of every fourth byte except the first.
+        if (i > 0 && i % 4 == 0) {
+            printf(" ");
+        }
+
+        // Write the byte in hex form, or a spacer if we're out of bytes.
         if (i < numBytes) {
             printf(" %02X", buffer[i]);
         } else {
             printf("   ");
         }
-        if ((i + 1) % 4 == 0 && i != bytesPerLine - 1) {
-            printf(" ");
-        }
     }
 
     printf(" | ");
+
+    // Write a character for each byte in the printable ascii range.
     for (int i = 0; i < numBytes; i++) {
         printf("%c", isprint(buffer[i]) ? buffer[i] : '.');
     }
@@ -56,8 +66,10 @@ void writeln(unsigned char* buffer, size_t numBytes, int offset, int bytesPerLin
 }
 
 
+// Dump the specified file to stdout.
 void dump(FILE* file, int offset, int bytesToRead, int bytesPerLine)
 {
+    // If an offset has been specified, attempt to seek to it.
     if (offset != 0) {
         if (fseek(file, offset, 0) != 0) {
             fprintf(stderr, "error: cannot locate offset in file\n");
@@ -65,23 +77,45 @@ void dump(FILE* file, int offset, int bytesToRead, int bytesPerLine)
         }
     }
 
+    // Allocate a buffer to hold one line of input from the file.
     unsigned char* buffer = (unsigned char*)malloc(bytesPerLine);
     if (buffer == NULL) {
         fprintf(stderr, "error: insufficient memory\n");
         exit(1);
     }
 
-    size_t n;
+    // Number of bytes read by the last call to fread().
+    size_t numBytes;
+
+    // Maximum number of bytes to attempt to read per call to fread();
+    size_t maxBytes;
+
+    // Read and dump one line of input per iteration.
     while (true) {
-        if (bytesToRead > -1 && bytesToRead < bytesPerLine) {
-            n = fread(buffer, sizeof(char), bytesToRead, file);
-        } else {
-            n = fread(buffer, sizeof(char), bytesPerLine, file);
+
+        // If bytesToRead < 0 (read all), try to read one full line.
+        if (bytesToRead < 0) {
+            maxBytes = bytesPerLine;
         }
-        if (n > 0) {
-            writeln(buffer, n, offset, bytesPerLine);
-            offset += n;
-            bytesToRead -= n;
+
+        // Else if line length < bytesToRead, try to read one full line.
+        else if (bytesPerLine < bytesToRead) {
+            maxBytes = bytesPerLine;
+        }
+
+        // Otherwise, try to read all the remaining bytes in one go.
+        else {
+            maxBytes = bytesToRead;
+        }
+
+        // Attempt to read up to maxBytes from the file.
+        numBytes = fread(buffer, sizeof(char), maxBytes, file);
+
+        // Reading zero bytes means we've reached the end of the file.
+        if (numBytes > 0) {
+            writeln(buffer, numBytes, offset, bytesPerLine);
+            offset += numBytes;
+            bytesToRead -= numBytes;
         } else {
             break;
         }
@@ -91,14 +125,25 @@ void dump(FILE* file, int offset, int bytesToRead, int bytesPerLine)
 }
 
 
+// Application entry point.
 int main(int argc, char* argv[])
 {
+    // File offset at which to begin reading.
     int offset = 0;
+
+    // Total number of bytes to read (-1 to read the entire file).
     int bytesToRead = -1;
+
+    // Number of bytes per line to display in the output.
     int bytesPerLine = 16;
-    int c;
+
+    // Input file.
     FILE* file;
 
+    // Getopt variable for parsing command line arguments.
+    int c;
+
+    // Check for the presence of a --help or --version flag.
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--help") == 0) {
             printf("%s", helpText);
@@ -110,6 +155,7 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Check for the presence of any command line options.
     while ((c = getopt(argc, argv, "o:n:l:")) != -1) {
         switch (c) {
             case 'o':
@@ -127,6 +173,7 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Default to reading from stdin if no filename has been specified.
     if (optind < argc) {
         file = fopen(argv[optind], "rb");
         if (file == NULL) {
