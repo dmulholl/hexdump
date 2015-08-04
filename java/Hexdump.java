@@ -64,7 +64,7 @@ class Hexdump {
         // Check for the presence of any command line options.
         while (++index < args.length) {
 
-            // Check for the presence of the -l option.
+            // Check for the -l <bytes-per-line> option.
             if (args[index].equals("-l")) {
                 if (++index < args.length) {
                     try {
@@ -80,7 +80,7 @@ class Hexdump {
                 }
             }
 
-            // Check for the presence of the -n option.
+            // Check for the -n <bytes-to-read> option.
             else if (args[index].equals("-n")) {
                 if (++index < args.length) {
                     try {
@@ -96,7 +96,7 @@ class Hexdump {
                 }
             }
 
-            // Check for the presence of the -o option.
+            // Check for the -o <offset> option
             else if (args[index].equals("-o")) {
                 if (++index < args.length) {
                     try {

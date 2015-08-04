@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 """
-Hex dump command line utility.
+Hexdump command line utility. Requires Python 3.
 
 Author: Darren Mulholland <dmulholland@outlook.ie>
 License: Public Domain
 
 """
-
-__version__ = '1.1.2'
-
 
 import argparse
 import os
@@ -16,6 +13,11 @@ import signal
 import sys
 
 
+# Application version number.
+__version__ = '1.1.3'
+
+
+# Command line help text.
 helptext = """\
 Usage: %s [FLAGS] [OPTIONS] ARGUMENTS
 
@@ -96,7 +98,7 @@ def dump(file, offset, bytes_to_read, bytes_per_line):
         if bytes_to_read < 0:
             max_bytes = bytes_per_line
 
-        # If line length < bytes_to_read, try to read one full line.
+        # Else if line length < bytes_to_read, try to read one full line.
         elif bytes_per_line < bytes_to_read:
             max_bytes = bytes_per_line
 

@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------
-# Hexdump command line utility.
+# Hexdump command line utility in x86 Linux assembly. AT&T syntax.
 #
 # Author: Darren Mulholland <dmulholland@outlook.ie>
 # License: Public Domain
