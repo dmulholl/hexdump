@@ -1,6 +1,5 @@
 
-Hexdump
-=======
+# Hexdump
 
 A simple hexdump command line utility, implemented in a variety of languages including C, C#, Go, Java, Python, Rust, Swift, and x86 assembly.
 
@@ -38,4 +37,4 @@ Sample output:
 
 ## License
 
-Public domain, unless indicated otherwise. The C# version includes MIT-licensed option-parsing code from the [Mono](https://github.com/mono/mono) project.
+This work has been placed in the public domain.
