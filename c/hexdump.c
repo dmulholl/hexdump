@@ -18,21 +18,20 @@ char* version = "0.3.0";
 
 
 // Command line help text.
-char* helpText =
-    "Usage: hexdump [FLAGS] [OPTIONS] ARGUMENTS\n"
+char* helpText = 
+	"Usage: hexdump [FILE] [OPTIONS]\n"
     "\n"
     "Arguments:\n"
-    "  <file>     file to dump (default: stdin)\n"
+    "  [FILE]                 File to read (default: STDIN)\n"
     "\n"
     "Options:\n"
-    "  -l <int>   bytes per line in output (default: 16)\n"
-    "  -n <int>   number of bytes to read\n"
-    "  -o <int>   byte offset at which to begin reading\n"
+    "  -l, --line <int>       Bytes per line in output (default: 16)\n"
+    "  -b, --bytes <int>      Number of bytes to read (default: all)\n"
+    "  -o, --offset <int>     Byte offset at which to begin reading\n"
     "\n"
     "Flags:\n"
-    "  --help     display this help text and exit\n"
-    "  --version  display version number and exit\n";
-
+    "  -h, --help             Display this help text and exit\n"
+    "  -v, --version          Display the version number and exit\n";
 
 // Write a single line of output to stdout.
 void writeln(unsigned char* buffer, size_t numBytes, int offset, int bytesPerLine)
@@ -65,11 +64,23 @@ void writeln(unsigned char* buffer, size_t numBytes, int offset, int bytesPerLin
     printf("\n");
 }
 
-
 // Dump the specified file to stdout.
 void dump(FILE* file, int offset, int bytesToRead, int bytesPerLine)
 {
     // If an offset has been specified, attempt to seek to it.
+    if (offset < 0) {
+        // Get the file size.
+        fseek(file, 0, SEEK_END);
+        long file_size = ftell(file);
+        if (file_size == -1) {
+            fprintf(stderr, "Error: cannot determine file size.\n");
+            exit(1);
+        }
+
+        // Adjust the offset to a positive value.
+        offset = file_size + offset;
+    }
+    
     if (offset != 0) {
         if (fseek(file, offset, 0) != 0) {
             fprintf(stderr, "error: cannot locate offset in file\n");
