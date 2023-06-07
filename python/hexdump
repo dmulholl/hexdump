@@ -28,6 +28,7 @@ Options:
   -l <int>   bytes per line in output (default: 16)
   -n <int>   number of bytes to read
   -o <int>   byte offset at which to begin reading
+  -s <file>  save output to specified file
 
 Flags:
   --help     display this help text and exit
@@ -57,39 +58,48 @@ def write(s):
         sys.exit()
 
 
-# Print a single line of output to stdout.
-def writeln(offset, buffer, bytes_per_line):
-
-    # Write the line number.
-    write('% 6X |' % offset)
+# Print a single line of output to stdout and optionally save to a file.
+def writeln(offset, buffer, bytes_per_line, save_file=None):
+    line = '% 6X |' % offset
 
     for i in range(bytes_per_line):
-
         # Write an extra space in front of every fourth byte except the first.
         if i > 0 and i % 4 == 0:
-            write(' ')
+            line += ' '
 
         # Write the byte in hex form, or a spacer if we're out of bytes.
-        write(' %02X' % buffer[i] if i < len(buffer) else '   ')
+        line += ' %02X' % buffer[i] if i < len(buffer) else '   '
 
-    write(' | ')
+    line += ' | '
 
     # Write a character for each byte in the printable ascii range.
     for i in range(len(buffer)):
-        write('%c' % buffer[i] if 32 <= buffer[i] <= 126 else '.')
+        line += '%c' % buffer[i] if 32 <= buffer[i] <= 126 else '.'
 
-    write('\n')
+    line += '\n'
 
+    if save_file:
+        save_file.write(line)
+    else:
+        write(line)
 
-# Dump the specified file to stdout.
-def dump(file, offset, bytes_to_read, bytes_per_line):
-
+# Dump the specified file to stdout and optionally save to a file.
+def dump(file, offset, bytes_to_read, bytes_per_line, save_file=None):
     # If an offset has been specified, attempt to seek to it.
     if offset:
-        if file.seekable():
-            file.seek(offset)
-        else:
-            sys.exit('Error: %s is not seekable.' % file.name)
+        if offset < 0:
+            if file.seekable():
+                file.seek(offset, os.SEEK_END)
+                offset = file.tell();
+            else:
+                sys.exit('Error: %s is not seekable.' % file.name)
+
+        elif offset > 0:
+            if file.seekable():
+                file.seek(offset)
+                offset = offset;
+            else:
+                sys.exit('Error: %s is not seekable.' % file.name)
 
     # Read and dump one line per iteration.
     while True:
@@ -111,7 +121,7 @@ def dump(file, offset, bytes_to_read, bytes_per_line):
 
         # A buffer length of zero means we're done.
         if len(buffer):
-            writeln(offset, buffer, bytes_per_line)
+            writeln(offset, buffer, bytes_per_line, save_file)
             offset += len(buffer)
             bytes_to_read -= len(buffer)
         else:
@@ -165,9 +175,14 @@ def main():
         default=0,
         dest='offset',
     )
+    parser.add_argument('-s', '--save',
+        help='save output to specified file',
+        type=argparse.FileType('w'),
+        dest='save_file',
+    )
 
     args = parser.parse_args()
-    dump(args.file, args.offset, args.btr, args.bpl)
+    dump(args.file, args.offset, args.btr, args.bpl, args.save_file)
 
 
 if __name__ == '__main__':
